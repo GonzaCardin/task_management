@@ -111,7 +111,7 @@ public class TaskService {
         return response;
     }
 
-    public TaskResponse getTaskById(Long id) throws Exception{
+    public TaskResponse getTaskById(Long id){
         TaskResponse response = new TaskResponse();
         try {
             Task task = taskRepository.findById(id).orElseThrow(() -> new Exception("Task not found"));

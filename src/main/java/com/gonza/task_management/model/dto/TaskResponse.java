@@ -9,4 +9,8 @@ public class TaskResponse {
     private Task task;
     private Boolean success;
     private String message;
+
+    public Boolean isSuccess(){
+        return success;
+    }
 }
