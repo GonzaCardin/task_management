@@ -1,6 +1,6 @@
 package com.gonza.task_management.model.entity;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import lombok.Data;
 
 @Data
@@ -27,4 +28,9 @@ public class TaskHistory {
     @ManyToOne
     @JoinColumn(name = "changed_by")
     private User changedBy;
+
+    @PrePersist
+    private void onCreate(){
+        timestamp = new Timestamp(System.currentTimeMillis());
+    }
 }
