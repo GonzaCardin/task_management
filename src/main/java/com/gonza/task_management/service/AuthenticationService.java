@@ -15,6 +15,7 @@ import com.gonza.task_management.repository.UserRepository;
 
 @Service
 public class AuthenticationService {
+
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -27,11 +28,16 @@ public class AuthenticationService {
     private AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(UserRequest userRequest) {
+        if (userRepository.findByEmail(userRequest.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email is already in use");
+        }
+
         User user = new User();
         user.setEmail(userRequest.getEmail());
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
-        Role defaultRole = roleRepository.findByName("USER").get();
+        Role defaultRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
         user.addRole(defaultRole);
 
         userRepository.save(user);
@@ -42,14 +48,17 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(UserRequest userRequest) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userRequest.getEmail(), userRequest.getPassword())
-        );
-        User user = userRepository.findByEmail(userRequest.getEmail()).get();
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(userRequest.getEmail(), userRequest.getPassword()));
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid username or password");
+        }
+
+        User user = userRepository.findByEmail(userRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         AuthenticationResponse authResponse = new AuthenticationResponse();
         authResponse.setToken(jwtService.getToken(user));
         return authResponse;
     }
-
-
 }

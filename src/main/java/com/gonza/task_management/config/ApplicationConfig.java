@@ -16,6 +16,7 @@ import com.gonza.task_management.repository.UserRepository;
 
 @Configuration
 public class ApplicationConfig {
+
     @Autowired
     private UserRepository userRepository;
 

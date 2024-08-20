@@ -18,29 +18,32 @@ import jakarta.servlet.http.HttpServletResponse;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
         @Autowired
         private JWTAuthenticationFilter jwtAuthenticationFilter;
         @Autowired
         private AuthenticationProvider authenticationProvider;
 
         @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authRequest -> authRequest
-                        .requestMatchers("/users/**","/login","/register").permitAll()
-                        .anyRequest().authenticated())
-                .sessionManagement(sessionManager -> sessionManager
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exceptionHandler -> exceptionHandler
-                        .accessDeniedHandler(accessDeniedHandler()))
-                .build();
-    }
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                return http
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(authRequest -> authRequest
+                                                .requestMatchers("/users/**", "/login").permitAll()
+                                                .requestMatchers("/swagger-ui/**").permitAll()
+                                                .anyRequest().authenticated())
+                                .sessionManagement(sessionManager -> sessionManager
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authenticationProvider(authenticationProvider)
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                .exceptionHandling(exceptionHandler -> exceptionHandler
+                                                .accessDeniedHandler(accessDeniedHandler()))
+                                .build();
+        }
 
-    @Bean
-    public AccessDeniedHandler accessDeniedHandler() {
-        return (request, response, accessDeniedException) -> response.sendError(HttpServletResponse.SC_FORBIDDEN);
-    }
+        @Bean
+        public AccessDeniedHandler accessDeniedHandler() {
+                return (request, response, accessDeniedException) -> response
+                                .sendError(HttpServletResponse.SC_FORBIDDEN);
+        }
 }
