@@ -24,32 +24,39 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JWTService jwtService;
+
     @Autowired
     private UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
         final String token = getTokenFromRequest(request);
-        try {
-            if (token != null && jwtService.isTokenExpired(token)) {
-                filterChain.doFilter(request, response);
+
+        if (token != null) {
+            try {
+                if (!jwtService.isTokenExpired(token)) {
+                    final String username = jwtService.getUsernameFromToken(token);
+
+                    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                        if (jwtService.isTokenValid(token, userDetails)) {
+                            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                            SecurityContextHolder.getContext().setAuthentication(auth);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error processing JWT token", e);
             }
-        } catch (Exception e) {
-            filterChain.doFilter(request, response);
         }
 
-        final String username = jwtService.getUsernameFromToken(token);
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtService.isTokenValid(token, userDetails)) {
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null,
-                        userDetails.getAuthorities());
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
-        }
+        // Continúa con el siguiente filtro en la cadena
         filterChain.doFilter(request, response);
     }
 
@@ -60,5 +67,4 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         }
         return null;
     }
-
 }

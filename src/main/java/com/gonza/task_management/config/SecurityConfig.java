@@ -25,13 +25,14 @@ public class SecurityConfig {
         private AuthenticationProvider authenticationProvider;
 
         @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 return http
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(authRequest -> authRequest
                                                 .requestMatchers("/users/**", "/login").permitAll()
                                                 .requestMatchers("/swagger-ui/**").permitAll()
-                                                .anyRequest().authenticated())
+                                                .requestMatchers("/tasks/**").hasAnyRole("ADMIN", "USER")
+                                                .anyRequest().denyAll())
                                 .sessionManagement(sessionManager -> sessionManager
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authenticationProvider(authenticationProvider)
@@ -42,7 +43,7 @@ public class SecurityConfig {
         }
 
         @Bean
-        public AccessDeniedHandler accessDeniedHandler() {
+        AccessDeniedHandler accessDeniedHandler() {
                 return (request, response, accessDeniedException) -> response
                                 .sendError(HttpServletResponse.SC_FORBIDDEN);
         }
