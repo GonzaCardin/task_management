@@ -30,6 +30,18 @@ public class DataInit implements CommandLineRunner {
             Role user = new Role();
             user.setName("USER");
             roleRepository.save(user);
+
+            Role projectManager = new Role();
+            projectManager.setName("PROJECT_MANAGER");
+            roleRepository.save(projectManager);
+
+            Role developer = new Role();
+            developer.setName("DEVELOPER");
+            roleRepository.save(developer);
+
+            Role teamLead = new Role();
+            teamLead.setName("TEAM_LEAD");
+            roleRepository.save(teamLead);
         }
 
         if (userRepository.count() == 0) {

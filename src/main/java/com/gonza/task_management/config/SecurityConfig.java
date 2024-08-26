@@ -24,6 +24,7 @@ public class SecurityConfig {
         @Autowired
         private AuthenticationProvider authenticationProvider;
 
+        // TODO: configure better access control
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 return http
@@ -31,7 +32,7 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(authRequest -> authRequest
                                                 .requestMatchers("/users/**", "/login").permitAll()
                                                 .requestMatchers("/swagger-ui/**").permitAll()
-                                                .requestMatchers("/tasks/**").hasAnyRole("ADMIN", "USER")
+                                                .requestMatchers("/tasks/**").hasAnyRole("ADMIN", "USER", "PROJECT_MANAGER", "DEVELOPER", "TEAM_LEAD")
                                                 .anyRequest().denyAll())
                                 .sessionManagement(sessionManager -> sessionManager
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -22,7 +22,8 @@ import com.gonza.task_management.model.dto.TaskRequest;
 import com.gonza.task_management.model.dto.TaskResponse;
 import com.gonza.task_management.model.entity.Task;
 import com.gonza.task_management.model.entity.TaskHistory;
-import com.gonza.task_management.model.entity.TaskStatus;
+import com.gonza.task_management.model.types.TaskPriority;
+import com.gonza.task_management.model.types.TaskStatus;
 import com.gonza.task_management.service.TaskService;
 
 @RestController
@@ -31,7 +32,7 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD')")
     @PostMapping("/createTask")
     public ResponseEntity<TaskResponse> createTask(@RequestBody TaskDTO taskDTO, @RequestParam Long userId) {
         TaskResponse response = taskService.createTask(taskDTO, userId);
@@ -42,7 +43,7 @@ public class TaskController {
 
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
     @PutMapping("/update/{id}")
     public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @RequestBody TaskRequest taskRequest,
             @RequestParam Long userId) {
@@ -53,7 +54,7 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<TaskResponse> deleteTask(@PathVariable Long id) {
         TaskResponse response = taskService.deleteTask(id);
@@ -63,7 +64,8 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    // TODO: analize this method, maybe it's not necessary
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
         TaskResponse response = taskService.getTaskById(id);
@@ -73,28 +75,43 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    @PreAuthorize("hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
+    @GetMapping("/mytasks")
+    public ResponseEntity<List<Task>> getMyTasks(@RequestParam Long userId) {
+        List<Task> tasks = taskService.getTaskByUserId(userId);
+        return ResponseEntity.ok(tasks);
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
+    @GetMapping("/priority/{priority}")
+    public ResponseEntity<List<Task>> getTasksByPriority(@PathVariable TaskPriority priority) {
+        List<Task> tasks = taskService.getTasksByPriority(priority);
+        return ResponseEntity.ok(tasks);
+    }
+
+    // TODO: analize this method, maybe it's not necessary
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasks() {
         List<Task> tasks = taskService.getAllTasks();
         return ResponseEntity.ok(tasks);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable TaskStatus status) {
         List<Task> tasks = taskService.getTasksByStatus(status);
         return ResponseEntity.ok(tasks);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD')")
     @GetMapping("/assignedTo/{userId}")
     public ResponseEntity<List<Task>> getTasksByAssignedTo(@PathVariable Long userId) throws Exception {
         List<Task> tasks = taskService.getTasksByAssignedTo(userId);
         return ResponseEntity.ok(tasks);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
     @GetMapping("/history/{taskId}")
     public ResponseEntity<List<TaskHistory>> getTaskHistory(@PathVariable Long taskId) {
         List<TaskHistory> history = taskService.getTaskHistory(taskId);

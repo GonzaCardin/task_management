@@ -39,3 +39,4 @@ As a future implementation, a frontend will be developed to allow users to inter
 - Implement notification system for task updates.
 - Improve reporting and analytics on task history.
 - Add user roles and permissions for more granular access control.
+- Project Management System: Plan to implement a Project Management System for enhanced project tracking and organization.
