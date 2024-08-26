@@ -25,7 +25,6 @@ import com.gonza.task_management.model.entity.TaskHistory;
 import com.gonza.task_management.model.entity.TaskStatus;
 import com.gonza.task_management.service.TaskService;
 
-
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
