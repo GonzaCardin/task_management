@@ -1,4 +1,4 @@
-package com.gonza.task_management.model.entity;
+package com.gonza.task_management.model.types;
 
 public enum TaskStatus {
     TODO,

@@ -1,6 +1,6 @@
 package com.gonza.task_management.model.dto;
 
-import com.gonza.task_management.model.entity.TaskStatus;
+import com.gonza.task_management.model.types.TaskStatus;
 
 import lombok.Data;
 

@@ -35,8 +35,8 @@ public class AuthenticationService {
         User user = new User();
         user.setEmail(userRequest.getEmail());
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-
-        Role defaultRole = roleRepository.findByName("USER")
+        // TODO: method: add or remove roles for users(only admin or project manager)
+        Role defaultRole = roleRepository.findByName("DEVELOPER")
                 .orElseThrow(() -> new RuntimeException("Default role not found"));
         user.addRole(defaultRole);
 

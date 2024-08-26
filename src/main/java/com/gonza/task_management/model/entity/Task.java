@@ -1,6 +1,13 @@
 package com.gonza.task_management.model.entity;
 
+import java.time.LocalDate;
+
+import com.gonza.task_management.model.types.TaskPriority;
+import com.gonza.task_management.model.types.TaskStatus;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,5 +28,8 @@ public class Task {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "assigned_to")
     private User assignedTo;
-    
+    @Enumerated(EnumType.STRING)
+    private TaskPriority priority;
+    private LocalDate dueDate;
+
 }
