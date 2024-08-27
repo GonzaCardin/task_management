@@ -1,10 +1,11 @@
 package com.gonza.task_management.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 import com.gonza.task_management.model.dto.TaskDTO;
 import com.gonza.task_management.model.dto.TaskRequest;
@@ -14,16 +15,17 @@ import com.gonza.task_management.model.entity.TaskHistory;
 import com.gonza.task_management.model.entity.User;
 import com.gonza.task_management.model.types.TaskPriority;
 import com.gonza.task_management.model.types.TaskStatus;
-import com.gonza.task_management.repository.TaskHistoryRepository;
 import com.gonza.task_management.repository.TaskRepository;
 import com.gonza.task_management.repository.UserRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class TaskService {
     @Autowired
     private TaskRepository taskRepository;
     @Autowired
-    private TaskHistoryRepository taskHistoryRepository;
+    private TaskHistoryService taskHistoryService;
     @Autowired
     private UserRepository userRepository;
 
@@ -43,14 +45,8 @@ public class TaskService {
             task.setDueDate(taskDTO.getDueDate());
             taskRepository.save(task);
 
-            User user = userRepository.findById(userId).orElseThrow(() -> new Exception("User not found"));
-
-            TaskHistory taskHistory = new TaskHistory();
-            taskHistory.setTask(task);
-            taskHistory.setChanges("Task created");
-            taskHistory.setCreatedBy(user);
-            taskHistory.setChangedBy(user);
-            taskHistoryRepository.save(taskHistory);
+            User user = userValidation(userId);
+            taskHistoryService.createTaskHistory(task, "Task created", user);
 
             response.setTask(task);
             response.setSuccess(true);
@@ -64,28 +60,34 @@ public class TaskService {
         return response;
     }
 
-    // TODO: method 1: updateTask for A/PM/TL || method 2: updateTask for
-    // Developer(only can update status and task history)
     @Transactional
-    public TaskResponse updateTask(Long taskId, TaskRequest taskRequest, Long userId) {
+    public TaskResponse updateTask(Long taskId, TaskDTO taskRequest, Long userId) {
         TaskResponse response = new TaskResponse();
         try {
-            Task task = taskRepository.findById(taskId).orElseThrow(() -> new Exception("Task not found"));
+            Task task = taskValidation(taskId);
 
-            if (!task.getStatus().equals(taskRequest.getStatus())) {
+            if (!task.getTitle().equals(taskRequest.getTitle()))
+                task.setTitle(taskRequest.getTitle());
+            if (!task.getDescription().equals(taskRequest.getDescription()))
+                task.setDescription(taskRequest.getDescription());
+            if (!task.getStatus().equals(taskRequest.getStatus()))
                 task.setStatus(taskRequest.getStatus());
-                taskRepository.save(task);
+            if (task.getAssignedTo() != null) {
+                Long assignedTo = taskRequest.getAssignedTo();
+                if (!assignedTo.equals(task.getAssignedTo().getId()))
+                    task.setAssignedTo(userRepository.findById(assignedTo)
+                            .orElseThrow(() -> new Exception("Assigned User not found")));
             }
+            if (!task.getDueDate().equals(taskRequest.getDueDate()))
+                task.setDueDate(taskRequest.getDueDate());
+            if (!task.getPriority().equals(taskRequest.getPriority()))
+                task.setPriority(taskRequest.getPriority());
+            taskRepository.save(task);
 
-            User user = userRepository.findById(userId).orElseThrow(() -> new Exception("User not found"));
+            User user = userValidation(userId);
+            taskHistoryService.createTaskHistory(task, "Task updated", user);
 
-            TaskHistory taskHistory = new TaskHistory();
-            taskHistory.setTask(task);
-            taskHistory.setChanges(taskRequest.getChanges());
-            taskHistory.setCreatedBy(task.getAssignedTo());
-            taskHistory.setChangedBy(user);
-            taskHistoryRepository.save(taskHistory);
-
+            response.setTask(task);
             response.setSuccess(true);
             response.setMessage("Task updated successfully");
 
@@ -98,12 +100,36 @@ public class TaskService {
     }
 
     @Transactional
+    public TaskResponse updateTaskHistory(Long taskId, TaskRequest taskRequest, Long userId) {
+        TaskResponse response = new TaskResponse();
+        try {
+            Task task = taskValidation(taskId);
+
+            if (!task.getStatus().equals(taskRequest.getStatus())) {
+                task.setStatus(taskRequest.getStatus());
+                taskRepository.save(task);
+            }
+
+            User user = userValidation(userId);
+            taskHistoryService.createTaskHistory(task, taskRequest.getChanges(), user);
+
+            response.setTask(task);
+            response.setSuccess(true);
+            response.setMessage("Task updated successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setSuccess(false);
+            response.setMessage("Error updating task: " + e.getMessage());
+        }
+        return response;
+    }
+
+    @Transactional
     public TaskResponse deleteTask(Long id) {
         TaskResponse response = new TaskResponse();
         try {
-            Task task = taskRepository.findById(id).orElseThrow(() -> new Exception("Task not found"));
+            Task task = taskValidation(id);
 
-            taskHistoryRepository.deleteByTaskId(id);
             taskRepository.delete(task);
 
             response.setSuccess(true);
@@ -119,7 +145,7 @@ public class TaskService {
     public TaskResponse getTaskById(Long id) {
         TaskResponse response = new TaskResponse();
         try {
-            Task task = taskRepository.findById(id).orElseThrow(() -> new Exception("Task not found"));
+            Task task = taskValidation(id);
             response.setSuccess(true);
             response.setMessage("Task found successfully");
             response.setTask(task);
@@ -141,23 +167,31 @@ public class TaskService {
 
     public List<Task> getTasksByAssignedTo(Long userId) throws Exception {
         if (!userRepository.existsById(userId)) {
-            throw new Exception("User not found");
+            throw new UsernameNotFoundException("User not found");
         }
         return taskRepository.findByAssignedToId(userId);
     }
 
     public List<TaskHistory> getTaskHistory(Long taskId) {
-        return taskHistoryRepository.findByTaskId(taskId);
+        return taskHistoryService.getTaskHistoryByTaskId(taskId);
     }
 
     public List<Task> getTaskByUserId(Long userId) {
-        if(!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("User not found");
+        if (!userRepository.existsById(userId)) {
+            throw new UsernameNotFoundException("User not found");
         }
         return taskRepository.findByAssignedToId(userId);
     }
 
     public List<Task> getTasksByPriority(TaskPriority priority) {
         return taskRepository.findByPriority(priority);
+    }
+
+    private User userValidation(Long userId){
+        return userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    private Task taskValidation(Long taskId){
+        return taskRepository.findById(taskId).orElseThrow(() -> new EntityNotFoundException("Task not found"));
     }
 }

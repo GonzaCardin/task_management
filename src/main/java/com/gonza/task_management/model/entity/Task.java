@@ -1,10 +1,12 @@
 package com.gonza.task_management.model.entity;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import com.gonza.task_management.model.types.TaskPriority;
 import com.gonza.task_management.model.types.TaskStatus;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -14,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
 
 @Data
@@ -31,5 +34,6 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private TaskPriority priority;
     private LocalDate dueDate;
-
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskHistory> history;
 }

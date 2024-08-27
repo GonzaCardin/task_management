@@ -11,14 +11,12 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gonza.task_management.model.dto.TaskDTO;
-import com.gonza.task_management.model.dto.TaskRequest;
 import com.gonza.task_management.model.dto.TaskResponse;
 import com.gonza.task_management.model.entity.Task;
 import com.gonza.task_management.model.entity.TaskHistory;
@@ -43,16 +41,17 @@ public class TaskController {
 
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
-    @PutMapping("/update/{id}")
-    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @RequestBody TaskRequest taskRequest,
-            @RequestParam Long userId) {
-        TaskResponse response = taskService.updateTask(id, taskRequest, userId);
-        if (!response.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+    // TODO: update the method update for AD/PM/TL and DEV
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
+    // @PutMapping("/update/{id}")
+    // public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @RequestBody TaskRequest taskRequest,
+    //         @RequestParam Long userId) {
+    //     TaskResponse response = taskService.updateTask(id, taskRequest, userId);
+    //     if (!response.isSuccess()) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    //     }
+    //     return ResponseEntity.status(HttpStatus.OK).body(response);
+    // }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD')")
     @DeleteMapping("/delete/{id}")

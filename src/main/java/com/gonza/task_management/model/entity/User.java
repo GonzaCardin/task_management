@@ -50,6 +50,10 @@ public class User implements UserDetails {
         this.roles.add(role);
     }
 
+    public void removeRole(Role role) {
+        this.roles.remove(role);
+    }
+
     @Override
     public String getUsername() {
         return this.email;
