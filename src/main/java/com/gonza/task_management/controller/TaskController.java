@@ -7,33 +7,35 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
+import com.gonza.task_management.model.dto.Response;
 import com.gonza.task_management.model.dto.TaskDTO;
-import com.gonza.task_management.model.dto.TaskResponse;
+import com.gonza.task_management.model.dto.TaskRequest;
 import com.gonza.task_management.model.entity.Task;
 import com.gonza.task_management.model.entity.TaskHistory;
 import com.gonza.task_management.model.types.TaskPriority;
 import com.gonza.task_management.model.types.TaskStatus;
 import com.gonza.task_management.service.TaskService;
 
-@RestController
+@Controller
 @RequestMapping("/tasks")
 public class TaskController {
     @Autowired
     private TaskService taskService;
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD')")
-    @PostMapping("/createTask")
-    public ResponseEntity<TaskResponse> createTask(@RequestBody TaskDTO taskDTO, @RequestParam Long userId) {
-        TaskResponse response = taskService.createTask(taskDTO, userId);
+    @PostMapping("/create")
+    public ResponseEntity<Response<Task>> createTask(@RequestBody TaskDTO taskDTO, @RequestParam Long userId) {
+        Response<Task> response = taskService.createTask(taskDTO, userId);
         if (!response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -41,33 +43,42 @@ public class TaskController {
 
     }
 
-    // TODO: update the method update for AD/PM/TL and DEV
-    // @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
-    // @PutMapping("/update/{id}")
-    // public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @RequestBody TaskRequest taskRequest,
-    //         @RequestParam Long userId) {
-    //     TaskResponse response = taskService.updateTask(id, taskRequest, userId);
-    //     if (!response.isSuccess()) {
-    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    //     }
-    //     return ResponseEntity.status(HttpStatus.OK).body(response);
-    // }
-
     @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD')")
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<TaskResponse> deleteTask(@PathVariable Long id) {
-        TaskResponse response = taskService.deleteTask(id);
+    @PutMapping("/updateTask/{taskId}")
+    public ResponseEntity<Response<Task>> updateTask(@PathVariable Long taskId, @RequestBody TaskDTO taskRequest,
+            @RequestParam Long userId) {
+        Response<Task> response = taskService.updateTask(taskId, taskRequest, userId);
         if (!response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    // TODO: analize this method, maybe it's not necessary
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
+    @PutMapping("/createTaskHistory/{taskId}")
+    public ResponseEntity<Response<Task>> updateTaskHistory(@PathVariable Long taskId,
+            @RequestBody TaskRequest taskRequest, @RequestParam Long userId) {
+        Response<Task> response = taskService.updateTaskHistory(taskId, taskRequest, userId);
+        if (!response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD')")
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Response<Task>> deleteTask(@PathVariable Long id) {
+        Response<Task> response = taskService.deleteTask(id);
+        if (!response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
     @GetMapping("/{id}")
-    public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
-        TaskResponse response = taskService.getTaskById(id);
+    public ResponseEntity<Response<Task>> getTaskById(@PathVariable Long id) {
+        Response<Task> response = taskService.getTaskById(id);
         if (!response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -88,7 +99,6 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
-    // TODO: analize this method, maybe it's not necessary
     @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('TEAM_LEAD') or hasRole('DEVELOPER')")
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasks() {

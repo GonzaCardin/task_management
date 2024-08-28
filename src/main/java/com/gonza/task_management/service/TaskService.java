@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gonza.task_management.model.dto.TaskDTO;
 import com.gonza.task_management.model.dto.TaskRequest;
-import com.gonza.task_management.model.dto.TaskResponse;
+import com.gonza.task_management.model.dto.Response;
 import com.gonza.task_management.model.entity.Task;
 import com.gonza.task_management.model.entity.TaskHistory;
 import com.gonza.task_management.model.entity.User;
@@ -30,8 +30,8 @@ public class TaskService {
     private UserRepository userRepository;
 
     @Transactional
-    public TaskResponse createTask(TaskDTO taskDTO, Long userId) {
-        TaskResponse response = new TaskResponse();
+    public Response<Task> createTask(TaskDTO taskDTO, Long userId) {
+        Response<Task> response = new Response<>();
         try {
             Task task = new Task();
             task.setTitle(taskDTO.getTitle());
@@ -48,7 +48,7 @@ public class TaskService {
             User user = userValidation(userId);
             taskHistoryService.createTaskHistory(task, "Task created", user);
 
-            response.setTask(task);
+            response.setData(task);
             response.setSuccess(true);
             response.setMessage("Task created successfully");
 
@@ -61,8 +61,8 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponse updateTask(Long taskId, TaskDTO taskRequest, Long userId) {
-        TaskResponse response = new TaskResponse();
+    public Response<Task> updateTask(Long taskId, TaskDTO taskRequest, Long userId) {
+        Response<Task> response = new Response<Task>();
         try {
             Task task = taskValidation(taskId);
 
@@ -87,7 +87,7 @@ public class TaskService {
             User user = userValidation(userId);
             taskHistoryService.createTaskHistory(task, "Task updated", user);
 
-            response.setTask(task);
+            response.setData(task);
             response.setSuccess(true);
             response.setMessage("Task updated successfully");
 
@@ -100,8 +100,8 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponse updateTaskHistory(Long taskId, TaskRequest taskRequest, Long userId) {
-        TaskResponse response = new TaskResponse();
+    public Response<Task> updateTaskHistory(Long taskId, TaskRequest taskRequest, Long userId) {
+        Response<Task> response = new Response<Task>();
         try {
             Task task = taskValidation(taskId);
 
@@ -113,7 +113,7 @@ public class TaskService {
             User user = userValidation(userId);
             taskHistoryService.createTaskHistory(task, taskRequest.getChanges(), user);
 
-            response.setTask(task);
+            response.setData(task);
             response.setSuccess(true);
             response.setMessage("Task updated successfully");
         } catch (Exception e) {
@@ -125,8 +125,8 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponse deleteTask(Long id) {
-        TaskResponse response = new TaskResponse();
+    public Response<Task> deleteTask(Long id) {
+        Response<Task> response = new Response<Task>();
         try {
             Task task = taskValidation(id);
 
@@ -142,13 +142,13 @@ public class TaskService {
         return response;
     }
 
-    public TaskResponse getTaskById(Long id) {
-        TaskResponse response = new TaskResponse();
+    public Response<Task> getTaskById(Long id) {
+        Response<Task> response = new Response<Task>();
         try {
             Task task = taskValidation(id);
             response.setSuccess(true);
             response.setMessage("Task found successfully");
-            response.setTask(task);
+            response.setData(task);
         } catch (Exception e) {
             e.printStackTrace();
             response.setSuccess(false);

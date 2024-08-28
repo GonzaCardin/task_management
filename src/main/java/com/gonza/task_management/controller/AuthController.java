@@ -1,0 +1,45 @@
+package com.gonza.task_management.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.gonza.task_management.model.dto.AuthenticationResponse;
+import com.gonza.task_management.model.dto.UserRequest;
+import com.gonza.task_management.service.AuthenticationService;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+@Controller
+@RequestMapping("/auth")
+public class AuthController {
+    @Autowired
+    private AuthenticationService authenticationService;
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthenticationResponse> register(@RequestBody UserRequest userRequest) {
+        try {
+            System.out.println("Registering user: " + userRequest);
+            AuthenticationResponse authResponse = authenticationService.register(userRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthenticationResponse> login(@RequestBody UserRequest userRequest, HttpServletResponse response) {
+        try {
+            System.out.println("Authenticating user: " + userRequest);
+            AuthenticationResponse authResponse = authenticationService.authenticate(userRequest);
+            return ResponseEntity.status(HttpStatus.OK).body(authResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+}

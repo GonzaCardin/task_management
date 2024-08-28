@@ -6,6 +6,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Service;
 
 import com.gonza.task_management.model.dto.AuthenticationResponse;
+import com.gonza.task_management.model.dto.Response;
 import com.gonza.task_management.model.dto.UserRequest;
 import com.gonza.task_management.model.entity.User;
 
@@ -20,7 +21,8 @@ public class AuthenticationService {
     private AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(UserRequest userRequest) {
-        User user = userService.createUser(userRequest);
+        Response<User> userResoponse = userService.createUser(userRequest);
+        User user = userResoponse.getData();
 
         AuthenticationResponse authResponse = new AuthenticationResponse();
         authResponse.setToken(jwtService.getToken(user));
