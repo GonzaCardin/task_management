@@ -1,5 +1,7 @@
 package com.gonza.task_management.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,22 +26,31 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // TODO: Implement Response to create user
     @Transactional
-    public User createUser(UserRequest user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email is already in use");
+    public Response<User> createUser(UserRequest user) {
+        Response<User> response = new Response<>();
+        try {
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+                throw new IllegalArgumentException("Email is already in use");
+            }
+            User newUser = new User();
+            newUser.setEmail(user.getEmail());
+            newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+
+            Role defaultRole = roleRepository.findByName("DEVELOPER")
+                    .orElseThrow(() -> new EntityNotFoundException("Default role not found"));
+            newUser.addRole(defaultRole);
+            userRepository.save(newUser);
+
+            response.setData(newUser);
+            response.setSuccess(true);
+            response.setMessage("User created successfully");
+        } catch (Exception e) {
+            response.setSuccess(false);
+            response.setMessage("Error creating user: " + e.getMessage());
         }
-        User newUser = new User();
-        newUser.setEmail(user.getEmail());
-        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(newUser);
 
-        Role defaultRole = roleRepository.findByName("DEVELOPER")
-                .orElseThrow(() -> new EntityNotFoundException("Default role not found"));
-        newUser.addRole(defaultRole);
-
-        return newUser;
+        return response;
     }
 
     @Transactional
@@ -63,6 +74,8 @@ public class UserService {
             }
 
             userRepository.save(userToUpdate);
+
+            response.setData(userToUpdate);
             response.setSuccess(true);
             response.setMessage("User updated successfully");
         } catch (Exception e) {
@@ -129,15 +142,18 @@ public class UserService {
         return response;
     }
 
-    @Transactional
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    @Transactional
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
 }
